@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { executeSearch } from '@/lib/search';
+import { executeSearch } from '@/lib/search-local';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -21,8 +21,12 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  const typeParam = searchParams.get('type');
+  const type =
+    typeParam === 'diagnosis' || typeParam === 'procedure' ? typeParam : undefined;
+
   try {
-    const results = await executeSearch(q);
+    const results = await executeSearch(q, type);
     return NextResponse.json({
       results,
       query: q,

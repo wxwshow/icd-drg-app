@@ -34,6 +34,53 @@ export default function ResultCard({ result }: ResultCardProps) {
   const typeCfg = TYPE_LABELS[result.icd_type] ?? TYPE_LABELS.diagnosis;
   const hasDRG = result.drg_code != null;
 
+  // DRG-only hit (a DRG group matched with no linked ICD code)
+  if (result.match_source === 'drg' && !result.icd_code) {
+    return (
+      <div className="bg-white rounded-xl border border-blue-200 p-5
+                      hover:shadow-md transition-all duration-200">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <code className="text-lg font-mono font-bold text-blue-700">
+                {result.drg_code}
+              </code>
+              {result.drg_type && (
+                <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${DRG_TYPE_LABELS[result.drg_type] ?? ''}`}>
+                  {DRG_TYPE_TEXT[result.drg_type] ?? result.drg_type}
+                </span>
+              )}
+              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                DRG 分组
+              </span>
+            </div>
+            <p className="text-sm text-slate-600 leading-relaxed mb-2">
+              {result.drg_description}
+            </p>
+            {result.mdc_code && (
+              <p className="text-xs text-slate-400">
+                {result.mdc_code}
+                {result.mdc_description && ` · ${result.mdc_description}`}
+              </p>
+            )}
+          </div>
+          <div className="flex flex-col items-end gap-1 flex-shrink-0">
+            {result.relative_weight != null && (
+              <span className="text-xs text-slate-400">
+                权重：{result.relative_weight.toFixed(4)}
+              </span>
+            )}
+            {result.gmlos != null && (
+              <span className="text-xs text-slate-400">
+                平均住院 {result.gmlos} 天
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-5
                     hover:border-blue-300 hover:shadow-md
@@ -41,13 +88,18 @@ export default function ResultCard({ result }: ResultCardProps) {
       <div className="flex items-start justify-between gap-4">
         {/* Left: ICD-10 */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
             <code className="text-lg font-mono font-bold text-slate-900">
               {result.icd_code}
             </code>
             <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${typeCfg.color}`}>
               {typeCfg.label}
             </span>
+            {result.match_source === 'drg' && (
+              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                DRG 匹配
+              </span>
+            )}
           </div>
           <p className="text-sm text-slate-600 leading-relaxed mb-2">
             {result.icd_description}
@@ -88,6 +140,11 @@ export default function ResultCard({ result }: ResultCardProps) {
               {result.relative_weight != null && (
                 <span className="text-xs text-slate-400">
                   权重：{result.relative_weight.toFixed(4)}
+                </span>
+              )}
+              {result.gmlos != null && (
+                <span className="text-xs text-slate-400">
+                  平均住院 {result.gmlos} 天
                 </span>
               )}
             </>

@@ -51,7 +51,10 @@ export interface SearchResult {
   mdc_code: string | null;
   mdc_description: string | null;
   relative_weight: number | null;
+  gmlos: number | null;
   role: MappingRole | null;
+  /** Which table produced this row — used to render DRG hits differently */
+  match_source: 'icd' | 'drg';
 }
 
 /** Shape of the API response */

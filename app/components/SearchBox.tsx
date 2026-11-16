@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 interface SearchBoxProps {
   onSearch: (query: string) => void;
   loading: boolean;
+  initialValue?: string;
 }
 
 function useDebounce(value: string, delay: number): string {
@@ -16,11 +17,16 @@ function useDebounce(value: string, delay: number): string {
   return debounced;
 }
 
-export default function SearchBox({ onSearch, loading }: SearchBoxProps) {
-  const [value, setValue] = useState('');
+export default function SearchBox({ onSearch, loading, initialValue }: SearchBoxProps) {
+  const [value, setValue] = useState(initialValue ?? '');
   const debouncedValue = useDebounce(value, 350);
   const inputRef = useRef<HTMLInputElement>(null);
   const isFirstRender = useRef(true);
+
+  // Keep the input in sync when a deep link (?q=...) arrives after mount
+  useEffect(() => {
+    if (initialValue) setValue(initialValue);
+  }, [initialValue]);
 
   useEffect(() => {
     if (isFirstRender.current) {

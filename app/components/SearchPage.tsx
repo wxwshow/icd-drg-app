@@ -1,12 +1,22 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import SearchBox from './SearchBox';
 import ResultCard from './ResultCard';
 import type { SearchResponse, SearchResult } from '@/lib/types';
 
+function syncUrl(q: string) {
+  if (typeof window === 'undefined') return;
+  const next = new URLSearchParams(window.location.search);
+  if (q.trim()) next.set('q', q.trim());
+  else next.delete('q');
+  const qs = next.toString();
+  window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname);
+}
+
 export default function SearchPage() {
   const [query, setQuery] = useState('');
+  const [initialValue, setInitialValue] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,11 +29,13 @@ export default function SearchPage() {
       setResults([]);
       setHasSearched(false);
       setError(null);
+      syncUrl('');
       return;
     }
 
     setLoading(true);
     setError(null);
+    syncUrl(q);
 
     try {
       const res = await fetch(`/api/search?q=${encodeURIComponent(q.trim())}`);
@@ -44,9 +56,15 @@ export default function SearchPage() {
     }
   }, []);
 
+  // Shareable deep links: /?q=高血压
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get('q')?.trim();
+    if (q) setInitialValue(q);
+  }, []);
+
   return (
     <div className="flex flex-col items-center gap-8 w-full">
-      <SearchBox onSearch={handleSearch} loading={loading} />
+      <SearchBox onSearch={handleSearch} loading={loading} initialValue={initialValue} />
 
       {/* Loading */}
       {loading && (
@@ -84,7 +102,7 @@ export default function SearchPage() {
             输入 ICD-10 编码、诊断名称或 DRG 关键词进行搜索
           </p>
           <p className="text-sm">
-            示例：&ldquo;高血压&rdquo;、&ldquo;I10&rdquo;、&ldquo;心力衰竭&rdquo;、&ldquo;F60A&rdquo;
+            示例：&ldquo;高血压&rdquo;、&ldquo;I11&rdquo;、&ldquo;肺炎&rdquo;、&ldquo;F06A&rdquo;
           </p>
         </div>
       )}
